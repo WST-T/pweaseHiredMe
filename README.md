@@ -40,8 +40,8 @@ Your friendly neighborhood interview scheduler! Never miss an interview again wi
 ## Setup Guide 🛠️
 1. You need to clone the repo ma dude -> 
 ```bash
-git clone https://github.com/yourusername/interview-buddy-bot.git
-cd interview-buddy-bot
+git clone https://github.com/yourusername/pweaseHiredMe.git
+cd pweaseHiredMe
 ```
 
 2. Set up virtual environment
