@@ -11,6 +11,7 @@ intents.message_content = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 paris_tz = pytz.timezone("Europe/Paris")
+bot.help_command = None
 load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 if BOT_TOKEN is None:
@@ -243,6 +244,62 @@ async def delete_interview(ctx: commands.Context, interview_id: int):
         await ctx.send("❌ Interview not found or you don't have permission!")
     else:
         await ctx.send("✅ Interview deleted successfully!")
+
+
+@bot.command()
+async def help(ctx):
+    """Display all available commands"""
+    embed = discord.Embed(
+        title="pweaseHiredMe 🍩",
+        description="Here's everything I can do!",
+        color=0xFFB6C1,  # Pink color
+    )
+
+    # User Commands
+    embed.add_field(
+        name="📝 User Commands",
+        value=(
+            "`!schedule <date> <type> <description>` - Schedule interview\n"
+            "`!my_interviews` - List your interviews\n"
+            "`!update_interview <ID> <key=value>` - Modify interview\n"
+            "`!delete_interview <ID>` - Remove interview"
+        ),
+        inline=False,
+    )
+
+    # Admin Commands
+    if ctx.author.guild_permissions.administrator:
+        embed.add_field(
+            name="👑 Admin Commands",
+            value="`!all_interviews` - View all scheduled interviews",
+            inline=False,
+        )
+
+    # Automatic Features
+    embed.add_field(
+        name="⏰ Automatic Features",
+        value=(
+            "• Daily reminders at 8AM Paris time\n"
+            "• Weekly rankings every Sunday\n"
+            "• Auto-cleanup of old interviews"
+        ),
+        inline=False,
+    )
+
+    # Tips
+    embed.add_field(
+        name="💡 Pro Tips",
+        value=(
+            "• Use quotes for multi-word descriptions\n"
+            "• Find IDs with `!my_interviews`\n"
+            "• Times are in Paris/CET timezone"
+        ),
+        inline=False,
+    )
+
+    embed.set_footer(text="Made with 💖 by WST-T '文森特'")
+
+    await ctx.send(embed=embed)
 
 
 @bot.command()
