@@ -29,6 +29,7 @@
 
 ### Schedule Command
 !schedule 2024-03-01 HR "Cultural fit interview"
+
     Date Format: YYYY-MM-DD (e.g., 2024-02-28)
 
     Description: Use quotes for multi-word descriptions
@@ -47,6 +48,9 @@
     Delete Command - 
     !delete_interview 7
     ❗ Note: Deleted interviews cannot be recovered
+-----------------------------------------------------------------------
+    Help Command - 
+    !help
 
 ## Pro Tips 💡
 
