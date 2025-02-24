@@ -157,10 +157,11 @@ async def schedule(
 @bot.command()
 @commands.has_permissions(administrator=True)
 async def all_interviews(ctx):
-    """Show all scheduled interviews (Admin only)"""
+    today_iso = datetime.now(paris_tz).date().isoformat()
     with get_db() as conn:
         cursor = conn.execute(
-            "SELECT * FROM interviews ORDER BY interview_date"
+            "SELECT * FROM interviews WHERE interview_date >= ? ORDER BY interview_date",
+            (today_iso,),
         )
         interviews = cursor.fetchall()
 
@@ -172,27 +173,29 @@ async def all_interviews(ctx):
     processed = []
     for interview in interviews:
         interview = dict(interview)
-        interview['interview_date'] = datetime.strptime(
-            interview['interview_date'], "%Y-%m-%d"
+        interview["interview_date"] = datetime.strptime(
+            interview["interview_date"], "%Y-%m-%d"
         ).date()
         processed.append(interview)
 
     # Group interviews by date
     today = datetime.now(paris_tz).date()
     date_groups = {}
-    
+
     for interview in processed:
-        int_date = interview['interview_date']
+        int_date = interview["interview_date"]
         days_diff = (int_date - today).days
-        
+
         if days_diff == 0:
             group = "**Today** 🚨"
         elif days_diff == 1:
             group = "**Tomorrow** ⏳"
         else:
-            days_text = f"in {days_diff} days" if days_diff > 0 else f"{-days_diff} days ago"
+            days_text = (
+                f"in {days_diff} days" if days_diff > 0 else f"{-days_diff} days ago"
+            )
             group = f"**{int_date.strftime('%A, %b %d')}** ({days_text}) 📅"
-        
+
         date_groups.setdefault(group, []).append(interview)
 
     # Build message with proper sorting
@@ -200,10 +203,12 @@ async def all_interviews(ctx):
     for group_name, group_interviews in sorted(
         date_groups.items(),
         key=lambda x: (
-            today if "Today" in x[0] 
-            else today + timedelta(days=1) if "Tomorrow" in x[0]
-            else int_date  # Use actual date from processed interviews
-        )
+            today
+            if "Today" in x[0]
+            else (
+                today + timedelta(days=1) if "Tomorrow" in x[0] else int_date
+            )  # Use actual date from processed interviews
+        ),
     ):
         message.append(f"\n{group_name}")
         for interview in group_interviews:
@@ -286,19 +291,19 @@ async def delete_interview(ctx: commands.Context, interview_id: int):
 
 @bot.command()
 async def help(ctx):
-    """Display all available commands"""
     embed = discord.Embed(
         title="pweaseHiredMe 🍩",
         description="Here's everything I can do!",
-        color=0xFFB6C1,  # Pink color
+        color=0xFFB6C1,
     )
 
-    # User Commands
+    # Updated User Commands section
     embed.add_field(
         name="📝 User Commands",
         value=(
             "`!schedule <date> <type> <description>` - Schedule interview\n"
-            "`!my_interviews` - List your interviews\n"
+            "`!my_interviews` - List your upcoming interviews\n"
+            "`!total` - Show your all-time interview count\n"  # Added this line
             "`!update_interview <ID> <key=value>` - Modify interview\n"
             "`!delete_interview <ID>` - Remove interview"
         ),
@@ -342,10 +347,11 @@ async def help(ctx):
 
 @bot.command()
 async def my_interviews(ctx):
+    today_iso = datetime.now(paris_tz).date().isoformat()
     with get_db() as conn:
         cursor = conn.execute(
-            "SELECT * FROM interviews WHERE user_id = ? ORDER BY interview_date",
-            (ctx.author.id,),
+            "SELECT * FROM interviews WHERE user_id = ? AND interview_date >= ? ORDER BY interview_date",
+            (ctx.author.id, today_iso),
         )
         interviews = cursor.fetchall()
 
@@ -384,6 +390,18 @@ async def my_interviews(ctx):
             )
 
     await ctx.send("\n".join(message))
+
+
+@bot.command()
+async def total(ctx):
+    """Show your all-time interview count"""
+    with get_db() as conn:
+        cursor = conn.execute(
+            "SELECT COUNT(*) FROM interviews WHERE user_id = ?", (ctx.author.id,)
+        )
+        count = cursor.fetchone()[0]
+
+    await ctx.send(f"🎉 You've scheduled {count} interviews in total!")
 
 
 # Replace with your bot token
