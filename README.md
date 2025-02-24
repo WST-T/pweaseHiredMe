@@ -3,6 +3,7 @@
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Di![Untitled](https://github.com/user-attachments/assets/bd4ad9bc-2ff3-419a-ae30-dcda63db4e25)
 scord.py](https://img.shields.io/badge/discord.py-2.3.2-blue?logo=discord)
+
 Your friendly neighborhood interview scheduler! Never miss an interview again with daily reminders and weekly progress tracking. 🚀
 
 ![Untitled](https://github.com/user-attachments/assets/8c50e899-86a0-4694-80bd-a4c54796c0bb)
