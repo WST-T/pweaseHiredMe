@@ -15,5 +15,6 @@ platformdirs==4.3.6
 python-dotenv==1.0.0
 pytz==2024.1
 ruff==0.9.7
+types-pytz==2025.1.0.20250204
 typing_extensions==4.11.0
 yarl==1.9.4

@@ -1,7 +1,6 @@
 import discord
 from discord.ext import commands, tasks
 from datetime import datetime, time, timedelta
-from discord.ext.commands import Context
 from dotenv import load_dotenv
 import sqlite3
 import os
