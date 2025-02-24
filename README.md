@@ -34,6 +34,7 @@ Your friendly neighborhood interview scheduler! Never miss an interview again wi
 !update_interview 3 date=2024-02-25
 !delete_interview 5
 !help
+!total
 ```
 
 ## Setup Guide 🛠️
