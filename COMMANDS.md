@@ -51,6 +51,10 @@
 -----------------------------------------------------------------------
     Help Command - 
     !help
+-----------------------------------------------------------------------
+    Total Command -
+    !total
+    🐣 This command will retrieves your all time amount of schedule
 
 ## Pro Tips 💡
 
