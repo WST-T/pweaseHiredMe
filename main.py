@@ -48,21 +48,21 @@ class InterviewManager:
         with get_db() as conn:
             conn.execute(
                 """INSERT INTO interviews 
-            (user_id, user_name, interview_date, interview_type, description, created_at)
-            VALUES (?, ?, ?, ?, ?, ?)""",
+                (user_id, user_name, interview_date, interview_type, description, created_at)
+                VALUES (?, ?, ?, ?, ?, ?)""",
                 (
                     user_id,
                     user_name,
-                    interview_date,
+                    interview_date.isoformat(),  # Store as ISO string
                     interview_type,
                     description,
-                    datetime.now(),
+                    datetime.now().isoformat(),
                 ),
             )
 
     @staticmethod
     def get_today_interviews():
-        today = datetime.now(paris_tz).date()
+        today = datetime.now(paris_tz).date().isoformat()  # Compare as string
         with get_db() as conn:
             cursor = conn.execute(
                 "SELECT * FROM interviews WHERE interview_date = ?", (today,)
@@ -159,20 +159,58 @@ async def schedule(
 async def all_interviews(ctx):
     """Show all scheduled interviews (Admin only)"""
     with get_db() as conn:
-        cursor = conn.execute("SELECT * FROM interviews ORDER BY interview_date")
+        cursor = conn.execute(
+            "SELECT * FROM interviews ORDER BY interview_date"
+        )
         interviews = cursor.fetchall()
 
     if not interviews:
         await ctx.send("No interviews scheduled yet! 📭")
         return
 
-    message = ["**All Scheduled Interviews** 📋"]
+    # Convert string dates to date objects
+    processed = []
     for interview in interviews:
-        message.append(
-            f"`ID {interview['id']}` {interview['user_name']}: "
-            f"{interview['interview_date']} - {interview['interview_type']}\n"
-            f"*{interview['description']}*"
+        interview = dict(interview)
+        interview['interview_date'] = datetime.strptime(
+            interview['interview_date'], "%Y-%m-%d"
+        ).date()
+        processed.append(interview)
+
+    # Group interviews by date
+    today = datetime.now(paris_tz).date()
+    date_groups = {}
+    
+    for interview in processed:
+        int_date = interview['interview_date']
+        days_diff = (int_date - today).days
+        
+        if days_diff == 0:
+            group = "**Today** 🚨"
+        elif days_diff == 1:
+            group = "**Tomorrow** ⏳"
+        else:
+            days_text = f"in {days_diff} days" if days_diff > 0 else f"{-days_diff} days ago"
+            group = f"**{int_date.strftime('%A, %b %d')}** ({days_text}) 📅"
+        
+        date_groups.setdefault(group, []).append(interview)
+
+    # Build message with proper sorting
+    message = ["**All Scheduled Interviews**"]
+    for group_name, group_interviews in sorted(
+        date_groups.items(),
+        key=lambda x: (
+            today if "Today" in x[0] 
+            else today + timedelta(days=1) if "Tomorrow" in x[0]
+            else int_date  # Use actual date from processed interviews
         )
+    ):
+        message.append(f"\n{group_name}")
+        for interview in group_interviews:
+            message.append(
+                f"`ID {interview['id']}` {interview['user_name']}: "
+                f"{interview['interview_type']} - {interview['description']}"
+            )
 
     await ctx.send("\n".join(message))
 
@@ -306,7 +344,8 @@ async def help(ctx):
 async def my_interviews(ctx):
     with get_db() as conn:
         cursor = conn.execute(
-            "SELECT * FROM interviews WHERE user_id = ?", (ctx.author.id,)
+            "SELECT * FROM interviews WHERE user_id = ? ORDER BY interview_date",
+            (ctx.author.id,),
         )
         interviews = cursor.fetchall()
 
@@ -314,12 +353,35 @@ async def my_interviews(ctx):
         await ctx.send("You have no scheduled interviews! 🎉")
         return
 
-    message = ["**Your Scheduled Interviews 📅**"]
+    today = datetime.now(paris_tz).date()
+    date_groups = {}
+
     for interview in interviews:
-        message.append(
-            f"`ID {interview['id']}` {interview['interview_date']}: "
-            f"{interview['interview_type']} - {interview['description']}"
-        )
+        # Convert string to date object
+        int_date = datetime.strptime(interview["interview_date"], "%Y-%m-%d").date()
+        days_diff = (int_date - today).days
+
+        if days_diff == 0:
+            group = "**Today** 🚨"
+        elif days_diff == 1:
+            group = "**Tomorrow** ⏳"
+        else:
+            days_text = (
+                f"in {days_diff} days" if days_diff > 0 else f"{-days_diff} days ago"
+            )
+            group = f"**{int_date.strftime('%A, %b %d')}** ({days_text}) 📅"
+
+        date_groups.setdefault(group, []).append(interview)
+
+    # Build message
+    message = ["**Your Scheduled Interviews**"]
+    for group_name, group_interviews in date_groups.items():
+        message.append(f"\n{group_name}")
+        for interview in group_interviews:
+            message.append(
+                f"`ID {interview['id']}` {interview['interview_type']}: "
+                f"{interview['description']}"
+            )
 
     await ctx.send("\n".join(message))
 
