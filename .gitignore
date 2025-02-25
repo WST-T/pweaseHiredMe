@@ -171,3 +171,6 @@ cython_debug/
 .pypirc
 interviews.db
 .interviews.db
+
+#inventory
+inventory.ini
