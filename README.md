@@ -45,7 +45,7 @@ Your friendly neighborhood interview scheduler! Never miss an interview again wi
 ## Setup Guide 🛠️
 1. You need to clone the repo ma dude -> 
 ```bash
-git clone https://github.com/yourusername/pweaseHiredMe.git
+git clone https://github.com/WST-T/pweaseHiredMe.git
 cd pweaseHiredMe
 ```
 
