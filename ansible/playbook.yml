@@ -1,0 +1,73 @@
+---
+- name: Deploy Discord Bot to Remote Server
+  hosts: discord_bot
+  become: true
+  gather_facts: false
+  vars:
+    project_dir: /opt/discord-bot
+
+  tasks:
+    - name: Ensure Python is installed on the remote server
+      raw: |
+        apt-get update
+        apt-get install -y python3 python3-pip
+        ln -sf /usr/bin/python3 /usr/bin/python
+      changed_when: false
+
+    - name: Gather system facts after Python installation
+      setup:
+
+    - name: Create project directory on server
+      file:
+        path: "{{ project_dir }}"
+        state: directory
+        owner: "{{ ansible_user }}"
+        mode: '0755'
+
+    - name: Copy main bot files to the server
+      copy:
+        src: "../main.py"
+        dest: "{{ project_dir }}/main.py"
+        mode: '0644'
+
+    - name: Copy requirements.txt to the server
+      copy:
+        src: "../requirements.txt"
+        dest: "{{ project_dir }}/requirements.txt"
+        mode: '0644'
+
+    - name: Copy Dockerfile to the server
+      copy:
+        src: "../Dockerfile"
+        dest: "{{ project_dir }}/Dockerfile"
+        mode: '0644'
+
+    - name: Copy .env file to the server
+      copy:
+        src: "../.env"
+        dest: "{{ project_dir }}/.env"
+        mode: '0644'
+
+    - name: Copy docker-compose.yml to the server
+      copy:
+        src: "../docker-compose.yml"
+        dest: "{{ project_dir }}/docker-compose.yml"
+        mode: '0644'
+
+    - name: Wait for file system sync
+      pause:
+        seconds: 2
+
+    - name: Launch or restart the bot with Docker Compose
+      command: docker compose up --build -d
+      args:
+        chdir: "{{ project_dir }}"
+
+    - name: Check running containers
+      command: docker compose ps
+      args:
+        chdir: "{{ project_dir }}"
+      register: docker_status
+
+    - debug:
+        var: docker_status.stdout
