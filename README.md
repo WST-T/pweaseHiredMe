@@ -68,7 +68,7 @@ echo "CHANNEL_ID=your_channel_id_here" >> .env
 
 5. Run the bot!
 ```bash
-python main.py
+python run.py
 ```
 
 ## Configuration 🔧
