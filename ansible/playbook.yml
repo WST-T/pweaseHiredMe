@@ -5,17 +5,21 @@
   gather_facts: false
   vars:
     project_dir: /opt/discord-bot
+    files_to_copy:
+      - src: "../run.py"
+        dest: "{{ project_dir }}/run.py"
+      - src: "../bot"
+        dest: "{{ project_dir }}"
+      - src: "../requirements.txt"
+        dest: "{{ project_dir }}/requirements.txt"
+      - src: "../Dockerfile"
+        dest: "{{ project_dir }}/Dockerfile"
+      - src: "../.env"
+        dest: "{{ project_dir }}/.env"
+      - src: "../docker-compose.yml"
+        dest: "{{ project_dir }}/docker-compose.yml"
 
   tasks:
-    # - name: Ensure Python is installed on the remote server ##mettre install Docker et docker compose à la place. 
-    #   raw: |
-    #     apt-get update
-    #     apt-get install -y python3 python3-pip
-    #     ln -sf /usr/bin/python3 /usr/bin/python
-    #   changed_when: false
-
-    - name: Gather system facts after Python installation
-      setup:
 
     - name: Create project directory on server
       file:
@@ -24,46 +28,15 @@
         owner: "{{ ansible_user }}"
         mode: '0755'
 
-    - name: Copy main bot files to the server # simplifier juste copy directory
+    - name: Copy necessary files to the server
       copy:
-        src: "../main.py"
-        dest: "{{ project_dir }}/main.py"
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
         mode: '0644'
+      loop: "{{ files_to_copy }}"
 
-    - name: Copy requirements.txt to the server # simplifier juste copy directory
-      copy:
-        src: "../requirements.txt"
-        dest: "{{ project_dir }}/requirements.txt"
-        mode: '0644'
-
-    - name: Copy Dockerfile to the server # simplifier juste copy directory
-      copy:
-        src: "../Dockerfile"
-        dest: "{{ project_dir }}/Dockerfile"
-        mode: '0644'
-
-    - name: Copy .env file to the server # simplifier juste copy directory
-      copy:
-        src: "../.env"
-        dest: "{{ project_dir }}/.env"
-        mode: '0644'
-
-    - name: Copy docker-compose.yml to the server # simplifier juste copy directory
-      copy:
-        src: "../docker-compose.yml"
-        dest: "{{ project_dir }}/docker-compose.yml"
-        mode: '0644'
-
-    - name: Launch or restart the bot with Docker Compose # revoir, il y a un module docker-compose. à remplacer en tout sécurité
-      command: docker compose up --build -d
-      args:
-        chdir: "{{ project_dir }}"
-
-    - name: Check running containers # Delete ça après maj du module du dessus
-      command: docker compose ps
-      args:
-        chdir: "{{ project_dir }}"
-      register: docker_status
-
-    - debug: #à retirer
-        var: docker_status.stdout
+    - name: Launch or restart the bot with Docker Compose
+      community.docker.docker_compose_v2:
+        project_src: "{{ project_dir }}"
+        build: policy
+        state: present
