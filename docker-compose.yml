@@ -1,0 +1,13 @@
+
+services:
+  discord-bot:
+    build: .
+    env_file:
+      - .env
+    restart: unless-stopped
+    volumes:
+      - discord_bot_data:/app/data
+
+volumes:
+  discord_bot_data:
+    driver: local
