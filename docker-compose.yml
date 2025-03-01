@@ -6,4 +6,3 @@ services:
     env_file:
       - .env
     restart: unless-stopped
-    container_name: discord-bot
