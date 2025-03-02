@@ -1,0 +1,42 @@
+---
+- name: Deploy Discord Bot to Remote Server
+  hosts: discord_bot
+  become: true
+  gather_facts: false
+  vars:
+    project_dir: /opt/discord-bot
+    files_to_copy:
+      - src: "../run.py"
+        dest: "{{ project_dir }}/run.py"
+      - src: "../bot"
+        dest: "{{ project_dir }}"
+      - src: "../requirements.txt"
+        dest: "{{ project_dir }}/requirements.txt"
+      - src: "../Dockerfile"
+        dest: "{{ project_dir }}/Dockerfile"
+      - src: "../.env"
+        dest: "{{ project_dir }}/.env"
+      - src: "../docker-compose.yml"
+        dest: "{{ project_dir }}/docker-compose.yml"
+
+  tasks:
+
+    - name: Create project directory on server
+      file:
+        path: "{{ project_dir }}"
+        state: directory
+        owner: "{{ ansible_user }}"
+        mode: '0755'
+
+    - name: Copy necessary files to the server
+      copy:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        mode: '0644'
+      loop: "{{ files_to_copy }}"
+
+    - name: Launch or restart the bot with Docker Compose
+      community.docker.docker_compose_v2:
+        project_src: "{{ project_dir }}"
+        build: policy
+        state: present
