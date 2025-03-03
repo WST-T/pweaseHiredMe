@@ -1,8 +1,3 @@
-"""
-Interview commands cog.
-Handles all user-facing commands for managing interviews.
-"""
-
 import re
 import discord
 from discord.ext import commands
@@ -19,29 +14,38 @@ class InterviewCog(commands.Cog):
 
     @commands.command()
     async def schedule(
-        self,
-        ctx: commands.Context,
-        date_and_time: str,
-        interview_type: str,
-        *,
-        description: str = commands.parameter(description="Interview details"),
+        self, ctx: commands.Context, date_str: str, time_or_type: str, *args
     ):
         """Schedule a new interview
 
         Usage: !schedule 2024-03-01 14:30 Technical "System Design"
+        Or: !schedule 2024-03-01 Technical "System Design" (no time)
         """
-        # Match pattern for date and optional time
-        date_time_pattern = r"^(\d{4}-\d{2}-\d{2})(?:\s+(\d{1,2}:\d{2}))?$"
-        match = re.match(date_time_pattern, date_and_time)
+        # Check if time_or_type looks like a time (HH:MM format)
+        time_pattern = r"^\d{1,2}:\d{2}$"
+        is_time = re.match(time_pattern, time_or_type)
 
-        if not match:
-            await ctx.send(
-                "❌ Invalid format! Please use `YYYY-MM-DD` or `YYYY-MM-DD HH:MM`"
-            )
-            return
+        # Initialize variables
+        time_str = "No time specified"
+        interview_type = "Interview"  # Default
+        description = ""
 
-        date_str = match.group(1)
-        time_str = match.group(2) or "No time specified"  # Default if no time
+        if is_time:
+            # If it looks like a time, use it as the time
+            time_str = time_or_type
+
+            # The next arg is the interview type (if provided)
+            if args:
+                interview_type = args[0]
+                # The rest are the description
+                if len(args) > 1:
+                    description = " ".join(args[1:])
+        else:
+            # If it doesn't look like a time, it's the interview type
+            interview_type = time_or_type
+            # All remaining args are the description
+            if args:
+                description = " ".join(args)
 
         # Validate date
         interview_date = validate_date(date_str)
